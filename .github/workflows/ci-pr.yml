@@ -1,0 +1,34 @@
+name: CI PR
+
+on: 
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  Validate-in-CI-for-PR:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Run unit test
+        run: npm run test
+
+      - name: Install Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run e2e test
+        run: npm run e2e
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
