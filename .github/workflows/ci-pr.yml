@@ -1,4 +1,5 @@
 name: CI PR
+run-name: CI PR
 
 on: 
   pull_request:
@@ -23,7 +24,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run e2e test
-        run: npm run e2e
+        run: npx playwright test --project=chromium
 
       - uses: actions/upload-artifact@v3
         if: always()

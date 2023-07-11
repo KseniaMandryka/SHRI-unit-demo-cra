@@ -22,8 +22,10 @@
         "redux": "^4.2.0",
         "redux-observable": "^2.0.0",
         "rxjs": "^7.5.7",
+        "sudo": "^1.0.3",
         "typescript": "^4.9.3",
-        "web-vitals": "^1.1.2"
+        "web-vitals": "^1.1.2",
+        "xvfb": "^0.4.0"
     },
     "scripts": {
         "start": "react-scripts start",
