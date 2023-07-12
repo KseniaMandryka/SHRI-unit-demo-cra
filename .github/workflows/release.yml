@@ -9,17 +9,31 @@ on:
 jobs:
   Release:
     runs-on: ubuntu-latest
+
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.result }}
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  
+          fetch-depth: 0
+      - name: Install auto-changelog
+        run: npm i -g auto-changelog
 
-      - name: Create Release
-        uses: actions/create-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with: 
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+      - name: Create changelog
+        run: auto-changelog --commit-limit false --template keepachangelog
+
+      - name: Create Issue
+        id: create_issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          script: |
+            const fs = require('fs')
+            const description = fs.readFileSync('CHANGELOG.md', 'utf8')
+            const version = '${{ github.ref }}'.replace('refs/tags/', '')
+            const res = await github.rest.issues.create(issue)
+            const issue = { owner, repo, title: `Release ${version} by ${{ github.actor }} at ${{ res.data.number }}`, body: description, labels: ['RELEASE'] }
 
     
