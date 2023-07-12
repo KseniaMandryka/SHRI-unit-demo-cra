@@ -1,0 +1,28 @@
+name: Release
+run-name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+'
+
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          ref: ${{ github.event.ref }}
+          actor: ${{ github.actor }}
+          time: ${{ github.time }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+
+    
