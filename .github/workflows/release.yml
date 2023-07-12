@@ -9,62 +9,24 @@ on:
 jobs:
   Release:
     runs-on: ubuntu-latest
-
-    outputs:
-      issue_number: ${{ steps.create_issue.outputs.result }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
+        name: 'Checkout source'
+      - run: |
+            git fetch --prune --tags -f
+            git tag
+
+      - name: Setup node
+        uses: actions/setup-node@v1
         with:
-          fetch-depth: 0
-      - name: Install auto-changelog
-        run: npm i -g auto-changelog
+          node-version: '18'
 
-      - name: Create changelog
-        run: auto-changelog --commit-limit false --template keepachangelog
-
-      - name: Create Issue
-        id: create_issue
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          script: |
-            const fs = require('fs')
-            const description = fs.readFileSync('CHANGELOG.md', 'utf8')
-            const version = '${{ github.ref }}'.replace('refs/tags/', '')
-            const res = await github.rest.issues.create(issue)
-            const issue = { owner, repo, title: `Release ${version} by ${{ github.actor }} at ${{ res.data.number }}`, body: description, labels: ['RELEASE'] }
-  Issue:
-      needs: Release
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
-        - uses: actions/setup-node@v3
-          with:
-            node-version: '18'
-
-        - name: Install packages
-          run: npm ci
-
-        - name: Run test
-          run: npm run test
-
-        - name: Build
-          run: PUBLIC_URL="/SHRI-unit-demo-cra" npm run build
-
-        - name: Deploy
-          uses: JamesIves/github-pages-deploy-action@v4
-          with:
-            folder: build
-
-        - name: Close Issue
-          if: ${{ success() }}
-          uses: actions/github-script@v6
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            owner: ${{ github.repository_owner }}
-            repo: ${{ github.event.repository.name }}
-            script: |
-              github.rest.issues.update({ owner, repo, issueNumber: needs.release.outputs.issue_number })
-    
+      - name: Install
+        run: npm i
+        
+      - name: Run
+        env:
+          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+          QUEUE_ID: ${{ secrets.QUEUE_ID }}
+          QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
+        run: npm run release
