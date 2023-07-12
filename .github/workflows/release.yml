@@ -19,10 +19,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
-          ref: ${{ github.event.ref }}
-          actor: ${{ github.actor }}
-          time: ${{ github.time }}
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
 
     
