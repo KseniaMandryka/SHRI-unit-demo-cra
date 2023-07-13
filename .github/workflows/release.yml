@@ -1,0 +1,81 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v[0-9]+"
+
+jobs:
+  release:
+    name: Testing and release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Install packages
+        run: npm ci
+
+      # Билд проекта
+      - name: Build
+        run: npm run build
+
+      # Тестирование
+      - name: Unit tests
+        run: npm run test-ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: e2e tests
+        run: npm run e2e
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      # Создание артефактов для GH Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v2.0.0
+        with:
+          path: ./build
+
+  changelog:
+    name: Create release info
+    needs: release
+    uses: ./.github/workflows/changelog.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      issues: write
+
+  deploy:
+    needs: [release, changelog]
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

@@ -1,0 +1,77 @@
+name: Changelog
+on:
+  workflow_call
+
+jobs:
+  changelog:
+    name: create changelog and release result
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      issues: write
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+
+      # Формирование changelog
+      # Формирование информации о пользователе
+      - name: Get current commit info
+        run: |
+          echo ## Last commit
+          git log --name-status HEAD^..HEAD >> changelog.md
+          echo "____________________________________" >> changelog.md
+      # Формирование коммитов
+      - name: Get current and previous tag
+        run: |
+          echo PREV_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1  --max-count=1)) >> $GITHUB_ENV
+          echo CUR_TAG=$(git describe --abbrev=0 --tags) >> $GITHUB_ENV
+      - name: Get tags hashes
+        run: |
+          echo PREV_HASH=$(git show-ref -s ${{ env.PREV_TAG }}) >> $GITHUB_ENV
+          echo CUR_HASH=$(git show-ref -s ${{ env.CUR_TAG }}) >> $GITHUB_ENV
+      - name: Git oneline commits
+        run: |
+          echo "## Changelog" >> changelog.md
+          git log ${{ env.PREV_HASH }}..${{ env.CUR_HASH }} --oneline >> changelog.md
+      - name: Get current issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo CUR_ISSUE=$(gh issue list --search 'RELEASE ${{ env.CUR_TAG }}' --json number,title -s=all) >> $GITHUB_ENV
+      # Формирование результатов тестирования
+      - name: Before tests fail
+        if: ${{ failure() }}
+        run: |
+          echo "## Результаты тестов" >> changelog.md
+          echo "При CI проверки НЕ прошли, посмотреть результат можно по ссылке https://github.com/KseniaMandryka/CI/actions/runs/${{ github.run_id }}/" >> changelog.md
+          echo "Там же можно найти созданные артефакты" >> changelog.md
+      - name: Before tests success
+        if: ${{ !failure() }}
+        run: |
+          echo "## Результаты тестов" >> changelog.md
+          echo "При CI проверки прошли, посмотреть результат можно по ссылке https://github.com/KseniaMandryka/CI/actions/runs/${{ github.run_id }}/" >> changelog.md
+          echo "Там же можно найти созданные артефакты" >> changelog.md
+      # Формирование issue
+      - name: Create issue
+        if: ${{ !fromJson(env.CUR_ISSUE)[0].number }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo CREATED_ISSUE_NUMBER=$(gh issue create --title "RELEASE ${{ env.CUR_TAG }}" --body-file ./changelog.md) >> $GITHUB_ENV
+      - name: Add comment to exists issue
+        if: ${{ fromJson(env.CUR_ISSUE)[0].number }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue comment ${{ fromJson(env.CUR_ISSUE)[0].number }} --body-file ./changelog.md
+      - name: Open issue if not ok
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: ${{ failure() }}
+        run: gh issue reopen ${{ fromJson(env.CUR_ISSUE)[0].number || env.CREATED_ISSUE_NUMBER }}
+      - name: Close issue if ok
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: ${{ !failure() }}
+        run: gh issue close ${{ fromJson(env.CUR_ISSUE)[0].number || env.CREATED_ISSUE_NUMBER }}
