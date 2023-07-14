@@ -1,0 +1,92 @@
+name: Release
+run-name: ${{ github.actor }} release new version 
+
+on:
+  push:
+    tags: 'v[0-9]+'
+
+jobs:
+  Validate-in-CI-for-PR:
+    uses: ./.github/workflows/ci-pr.yml
+
+  Release:
+    needs: Validate-in-CI-for-PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          fetch-depth: 0
+          node-version: '18'
+
+    - name: Changelog
+      uses: ardalanamini/auto-changelog@v4
+      id  : changelog
+      with:
+        github-token            : ${{ github.token }}
+        commit-types            : |
+          feat: New Features
+          fix: Bug Fixes
+          build: Build System & Dependencies
+          perf: Performance Improvements
+          docs: Documentation
+          test: Tests
+          refactor: Refactors
+          chore: Chores
+          ci: CI  
+          style: Code Style
+          revert: Reverts
+        default-commit-type     : Other Changes
+        mention-authors         : true
+        mention-new-contributors: true
+        include-compare-link    : true
+        include-pr-links        : true
+        include-commit-links    : true
+        semver                  : false
+        use-github-autolink     : true
+
+      - name: Create info for issue
+        id: issueInfo
+        run: |
+          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
+          echo "v=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+      
+      - name: Create  issue
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTHOR: ${{ steps.issueInfo.outputs.author }}
+          DATE: ${{ steps.issueInfo.outputs.date }}
+          V: ${{ steps.issueInfo.outputs.v}}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+        with:
+          filename: .github/ISSUE_TEMPLATE.md
+          update_existing: true
+          search_existing: all
+          
+      outputs:
+      issueNumber: ${{ steps.create_issue.outputs.number }}
+
+  Deploy:
+    runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v3
+          with:
+            node-version: '18'
+
+        - name: Install packages
+          run: npm ci
+
+        - name: Build
+          run: npm run build
+
+        - name: Deploy with gh-pages
+          run: |
+            git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+            npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          
