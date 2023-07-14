@@ -19,31 +19,31 @@ jobs:
           fetch-depth: 0
           node-version: '18'
 
-    - name: Changelog
-      uses: ardalanamini/auto-changelog@v4
-      id  : changelog
-      with:
-        github-token            : ${{ github.token }}
-        commit-types            : |
-          feat: New Features
-          fix: Bug Fixes
-          build: Build System & Dependencies
-          perf: Performance Improvements
-          docs: Documentation
-          test: Tests
-          refactor: Refactors
-          chore: Chores
-          ci: CI  
-          style: Code Style
-          revert: Reverts
-        default-commit-type     : Other Changes
-        mention-authors         : true
-        mention-new-contributors: true
-        include-compare-link    : true
-        include-pr-links        : true
-        include-commit-links    : true
-        semver                  : false
-        use-github-autolink     : true
+      - name: Changelog
+        uses: ardalanamini/auto-changelog@v4
+        id  : changelog
+        with:
+          github-token            : ${{ github.token }}
+          commit-types            : |
+            feat: New Features
+            fix: Bug Fixes
+            build: Build System & Dependencies
+            perf: Performance Improvements
+            docs: Documentation
+            test: Tests
+            refactor: Refactors
+            chore: Chores
+            ci: CI  
+            style: Code Style
+            revert: Reverts
+          default-commit-type     : Other Changes
+          mention-authors         : true
+          mention-new-contributors: true
+          include-compare-link    : true
+          include-pr-links        : true
+          include-commit-links    : true
+          semver                  : false
+          use-github-autolink     : true
 
       - name: Create info for issue
         id: issueInfo
@@ -51,7 +51,7 @@ jobs:
           echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
           echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
           echo "v=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-      
+        
       - name: Create  issue
         uses: JasonEtco/create-an-issue@v2
         env:
@@ -64,8 +64,7 @@ jobs:
           filename: .github/ISSUE_TEMPLATE.md
           update_existing: true
           search_existing: all
-          
-      outputs:
+    outputs:
       issueNumber: ${{ steps.create_issue.outputs.number }}
 
   Deploy:
