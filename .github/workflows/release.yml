@@ -7,7 +7,7 @@ on:
 
 jobs:
   Validate-in-CI-for-PR:
-    uses: ./.github/workflows/ciPr.yml
+    uses: ./.github/workflows/ci.yml
 
   Release:
     needs: Validate-in-CI-for-PR
