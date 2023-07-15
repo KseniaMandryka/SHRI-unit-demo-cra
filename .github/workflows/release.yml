@@ -1,20 +1,20 @@
-name: 🚀 Release
+name: Release
 
 on:
   push:
     tags:
       - 'v[0-9]+'
 
-permissions:
-  contents: read
-  issues: write
+# permissions:
+#   contents: read
+#   issues: write
 
 jobs:
-  # tests:
-  #   uses: ./.github/workflows/ci.yml
+  Validate-in-CI-for-PR:
+    uses: ./.github/workflows/ci-pr.yml
 
   release:
-    # needs: tests
+    needs: Validate-in-CI-for-PR
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -24,10 +24,9 @@ jobs:
       - name: Get information
         id: tags
         run: |
-          currentTag=${{ github.ref_name }}
-          previousTag=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
-          echo "currentTag=${currentTag}" >> $GITHUB_OUTPUT
-          echo "previousTag=${previousTag}" >> $GITHUB_OUTPUT
+          prevVersion=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
+          echo "version=${github.ref_name}" >> $GITHUB_OUTPUT
+          echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
           echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
           echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
 
@@ -37,17 +36,17 @@ jobs:
         with:
           github-token: ${{ github.token }}
           commit-types: |
-            build: 🧯 Build System & Dependencies
-            ci: 💢 Continuous Integrations
-            docs: 📖 Documentation
-            feat: 🚀 New Features
-            fix: 🐞 Bug Fixes
-            perf: 💊 Performance Improvements
-            refactor: 🐝 Refactors
-            revert: 🔙 Reverts
-            style: 🎨 Code Style
-            test: ⛑ Tests
-          default-commit-type: 📂 Other Changes
+            build: Build System & Dependencies
+            ci: Continuous Integrations
+            docs: Documentation
+            feat: New Features
+            fix: Bug Fixes
+            perf: Performance Improvements
+            refactor: Refactors
+            revert: Reverts
+            style: Code Style
+            test: Tests
+          default-commit-type: Other Changes
           mention-authors: true
           mention-new-contributors: false
           include-compare-link: true
@@ -60,7 +59,7 @@ jobs:
         id: create_issue
         uses: JasonEtco/create-an-issue@v2
         env:
-          VERSION: ${{ steps.tags.outputs.currentTag}}
+          VERSION: ${{ steps.tags.outputs.version}}
           AUTHOR: ${{ steps.tags.outputs.author }}
           DATE: ${{ steps.tags.outputs.date }}
           CHANGELOG: ${{ steps.build_changelog.outputs.changelog }}
@@ -124,5 +123,5 @@ jobs:
   #       with:
   #         issue-number: ${{ needs.release.outputs.issueNumber }}
   #         comment: |
-  #           ## ✅ Close Issue
+  #           ## Close Issue
   #           Issue automatically closed on successful deployment
