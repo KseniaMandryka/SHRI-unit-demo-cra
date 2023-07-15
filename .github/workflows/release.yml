@@ -22,15 +22,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Info for issue
-        id: infoForIssue
-        run: |
-          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
-          echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
-          version=${{ github.ref_name }}
-          echo "version=${version}" >> $GITHUB_OUTPUT
-          prevVersion=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
-          echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
 
       - name: Changelog
         id: changelog
@@ -57,6 +48,16 @@ jobs:
           semver: false
           use-github-autolink: true
 
+      - name: Info for issue
+        id: infoForIssue
+        run: |
+          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
+          version=${{ github.ref_name }}
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          prevVersion=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
+          echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
+          
       - name: Create issue and update
         id: issue
         uses: JasonEtco/create-an-issue@v2
