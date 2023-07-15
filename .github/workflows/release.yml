@@ -100,12 +100,9 @@ jobs:
         run: npm run build
 
       - name: Deploy with gh-pages
-        run: |
-          npm install gh-pages@5.0.0
-          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
 
       - name: Comment issue with deploy
         uses: peter-evans/create-or-update-comment@v3
