@@ -1,5 +1,5 @@
 ---
-title: '{{ env.VERSION } Release'
-labels: {{ env.ACTION_NAME }}
-body: '{{ env.AUTHOR }} Author'
+title: "RELEASE: {{ env.VERSION }}"
+labels: Release
 ---
+{{ env.CHANGELOG }}
