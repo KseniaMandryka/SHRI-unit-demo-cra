@@ -29,7 +29,7 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
           echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
-          echo "date=$(date +'%d.%m.%Y %H:%M:%S')->format('M j, Y | H:i:s')" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
 
       - name: Build Changelog
         id: build_changelog
@@ -84,6 +84,48 @@ jobs:
     outputs:
       issueNumber: ${{ steps.create_issue.outputs.number }}
 
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy with gh-pages
+        run: |
+          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  Update-and-close-issue:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Find issue number
+        id: get-issue-number
+        uses: micalevisk/last-issue-action@v2.0.0
+        with:
+          labels: |
+            release
+          state: open
+
+      - name: Create comment
+        run: gh issue close ${{ steps.get-issue-number.outputs.issue-number }} --comment "Deploy - ${{ env.URL }}"
+        env:
+          URL: https://kseniamandryka.github.io/SHRI-unit-demo-cra/
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          
   # build-and-deploy:
   #   needs: release
   #   runs-on: ubuntu-latest
