@@ -22,15 +22,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Info for issue
-        id: infoForIssue
-        run: |
-          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
-          echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
-          version=${{ github.ref_name }}
-          echo "version=${version}" >> $GITHUB_OUTPUT
-          prevVersion=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
-          echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
 
       - name: Changelog
         id: changelog
@@ -57,6 +48,16 @@ jobs:
           semver: false
           use-github-autolink: true
 
+      - name: Info for issue
+        id: infoForIssue
+        run: |
+          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
+          version=${{ github.ref_name }}
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          prevVersion=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
+          echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
+
       - name: Create issue and update
         id: issue
         uses: JasonEtco/create-an-issue@v2
@@ -80,3 +81,42 @@ jobs:
             ${{github.server_url}}/${{ github.repository }}/actions/runs/${{github.run_id}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+    outputs:
+      issueNumber: ${{ steps.issue.outputs.number }}
+
+  Deploy:
+    needs: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy with gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
+
+      - name: Add info about deploy to issue
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ needs.Release.outputs.issueNumber }}
+          body: |
+            Deploy
+            See: https://kseniamandryka.github.io/SHRI-unit-demo-cra/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Close Issue
+        uses: peter-evans/close-issue@v3
+        with:
+          issue-number: ${{ needs.Release.outputs.issueNumber }}
+          comment: Close issue
