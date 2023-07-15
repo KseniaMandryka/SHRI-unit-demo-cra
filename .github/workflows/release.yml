@@ -1,0 +1,121 @@
+name: Release
+run-name: ${{ github.actor }} release new version 
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  Validate-in-CI-for-PR:
+    uses: ./.github/workflows/ci-pr.yml
+
+  Release:
+    needs: Validate-in-CI-for-PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Info for issue
+        id: infoForIssue
+        run: |
+          echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
+          version=${{ github.ref_name }}
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          prevVersion=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
+          echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
+
+      - name: Changelog
+        id: changelog
+        uses: ardalanamini/auto-changelog@v4
+        with:
+          github-token: ${{ github.token }}
+          commit-types: |
+            build: Build System & Dependencies
+            ci: Continuous Integrations
+            docs: Documentation
+            feat: New Features
+            fix: Bug Fixes
+            perf: Performance Improvements
+            refactor: Refactors
+            revert: Reverts
+            style: Code Style
+            test: Tests
+          default-commit-type: Other Changes
+          mention-authors: true
+          mention-new-contributors: false
+          include-compare-link: true
+          include-pr-links: true
+          include-commit-links: true
+          semver: false
+          use-github-autolink: true
+
+      - name: Create issue and update
+        id: issue
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          AUTHOR: ${{ steps.infoForIssue.outputs.author }}
+          DATE: ${{ steps.infoForIssue.outputs.date }}
+          VERSION: ${{ steps.infoForIssue.outputs.version}}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/ISSUE_TEMPLATE.md
+          update_existing: true
+          search_existing: all
+
+      - name: Link of test result for release list
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ steps.issue.outputs.number }}
+          body: |
+            Tests results:
+            ${{github.server_url}}/${{ github.repository }}/actions/runs/${{github.run_id}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    outputs:
+      issueNumber: ${{ steps.issue.outputs.number }}
+
+  Deploy:
+    needs: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy with gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
+
+      - name: Add info about deploy to issue
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ needs.Release.outputs.issueNumber }}
+          body: |
+            Deploy
+            See: https://kseniamandryka.github.io/SHRI-unit-demo-cra/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Close Issue
+        uses: peter-evans/close-issue@v3
+        with:
+          issue-number: ${{ needs.Release.outputs.issueNumber }}
+          comment: Close issue
