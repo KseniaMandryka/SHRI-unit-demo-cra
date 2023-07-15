@@ -75,7 +75,7 @@ jobs:
         with:
           issue-number: ${{ steps.create_issue.outputs.number }}
           body: |
-            ## ⚙️ Tests results №${{ github.run_id }}
+            ## Tests results ${{ github.run_id }}
             Download the files with the test results, can be downloaded from the link below:
             ${{github.server_url}}/${{ github.repository }}/actions/runs/${{github.run_id}}
         env:
@@ -99,10 +99,17 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy with gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: build
+      # - name: Deploy with gh-pages
+      #   uses: JamesIves/github-pages-deploy-action@v4
+      #   with:
+      #     folder: build
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2 
+        env:
+          name: github-pages
+          url: ${{ steps.deployment.outputs.page_url }}
 
       - name: Comment issue with deploy
         uses: peter-evans/create-or-update-comment@v3
