@@ -27,18 +27,7 @@ jobs:
         id: changelog
         uses: ardalanamini/auto-changelog@v4
         with:
-          github-token: ${{ github.token }}
-          commit-types: |
-            build: Build System & Dependencies
-            ci: Continuous Integrations
-            docs: Documentation
-            feat: New Features
-            fix: Bug Fixes
-            perf: Performance Improvements
-            refactor: Refactors
-            revert: Reverts
-            style: Code Style
-            test: Tests
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           default-commit-type: Other Changes
           mention-authors: true
           mention-new-contributors: false
