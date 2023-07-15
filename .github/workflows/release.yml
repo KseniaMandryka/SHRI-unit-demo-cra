@@ -62,6 +62,7 @@ jobs:
         uses: JasonEtco/create-an-issue@v2
         env:
           VERSION: ${{ steps.tags.outputs.currentTag}}
+          ACTION_NAME: ${{ github.action }}
           AUTHOR: ${{ steps.tags.outputs.author }}
           DATE: ${{ steps.tags.outputs.date }}
           CHANGELOG: ${{ steps.build_changelog.outputs.changelog }}
