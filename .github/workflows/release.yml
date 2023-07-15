@@ -67,7 +67,7 @@ jobs:
           CHANGELOG: ${{ steps.build_changelog.outputs.changelog }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: .github/ISSUE_TEMPLATE.md
+          filename: .github/TEMPLATE.md
           update_existing: true
           search_existing: all
 
