@@ -17,11 +17,15 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      - name: Install ESlint
+        run: npx eslint **/*.{js,jsx,ts,tsx}
+
       - name: Run unit test
         run: npm run test
 
       - name: Install Browsers
         run: npx playwright install --with-deps
+
 
       - name: Run e2e test
         run: npm run e2e
