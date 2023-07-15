@@ -5,6 +5,10 @@ on:
     tags:
       - 'v\d+'
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   tests:
     uses: ./.github/workflows/ci.yml
