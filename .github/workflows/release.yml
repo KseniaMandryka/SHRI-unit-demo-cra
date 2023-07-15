@@ -1,90 +1,110 @@
 name: Release
-run-name: ${{ github.actor }} release new version 
 
 on:
   push:
-    tags: 'v[0-9]+'
+    tags:
+      - 'v\d+'
+
+# permissions:
+#   contents: read
+#   issues: write
 
 jobs:
-  Validate-in-CI-for-PR:
+  tests:
     uses: ./.github/workflows/ci.yml
 
-  Release:
-    needs: Validate-in-CI-for-PR
+  release:
+    needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
         with:
           fetch-depth: 0
-          node-version: '18'
 
-      - name: Changelog
-        uses: ardalanamini/auto-changelog@v4
-        id  : changelog
-        with:
-          github-token            : ${{ github.token }}
-          commit-types            : |
-            feat: New Features
-            fix: Bug Fixes
-            build: Build System & Dependencies
-            perf: Performance Improvements
-            docs: Documentation
-            test: Tests
-            refactor: Refactors
-            chore: Chores
-            ci: CI  
-            style: Code Style
-            revert: Reverts
-          default-commit-type     : Other Changes
-          mention-authors         : true
-          mention-new-contributors: true
-          include-compare-link    : true
-          include-pr-links        : true
-          include-commit-links    : true
-          semver                  : false
-          use-github-autolink     : true
-
-      - name: Create info for issue
-        id: issueInfo
+      - name: Get information
+        id: tags
         run: |
+          currentTag=${{ github.ref_name }}
+          previousTag=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
+          echo "currentTag=${currentTag}" >> $GITHUB_OUTPUT
+          echo "previousTag=${previousTag}" >> $GITHUB_OUTPUT
           echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
           echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
-          echo "v=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-        
-      - name: Create  issue
+
+      - name: Build Changelog
+        id: build_changelog
+        uses: ardalanamini/auto-changelog@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          commit-types: |
+            fix: Bug Fixes
+            build: Build System & Dependencies
+            feat: New Features
+            ci: CI
+            docs: Documentation
+            test: Tests
+            perf: Performance Improvements
+            refactor: Refactors
+            chore: Chores
+            style: Code Style
+            revert: Reverts
+          default-commit-type: Other Changes
+          mention-authors: true
+          mention-new-contributors: true
+          include-compare-link: true
+          include-pr-links: true
+          include-commit-links: true
+          semver: false
+          use-github-autolink: true
+
+      - name: Create release issue
+        id: create_issue
         uses: JasonEtco/create-an-issue@v2
         env:
+          VERSION: ${{ steps.tags.outputs.currentTag}}
+          AUTHOR: ${{ steps.tags.outputs.author }}
+          DATE: ${{ steps.tags.outputs.date }}
+          CHANGELOG: ${{ steps.build_changelog.outputs.changelog }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AUTHOR: ${{ steps.issueInfo.outputs.author }}
-          DATE: ${{ steps.issueInfo.outputs.date }}
-          V: ${{ steps.issueInfo.outputs.v}}
-          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
         with:
-          filename: .github/ISSUE_TEMPLATE.md
+          filename: .github/TEMPLATE.md
           update_existing: true
           search_existing: all
+
+      - name: Add comment with test results to issue
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ steps.create_issue.outputs.number }}
+          body: |
+            ## Tests results №${{ github.run_id }}
+            Download test results:
+            ${{github.server_url}}/${{ github.repository }}/actions/runs/${{github.run_id}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     outputs:
       issueNumber: ${{ steps.create_issue.outputs.number }}
 
-  Deploy:
+  build-and-deploy:
+    needs: release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          fetch-depth: 0
 
-      - name: Install packages
+      - name: Install correct Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
         run: npm ci
 
       - name: Build
         run: npm run build
 
-      - name: Deploy with gh-pages
-        run: |
-          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+      - name: Deploy to GH Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build

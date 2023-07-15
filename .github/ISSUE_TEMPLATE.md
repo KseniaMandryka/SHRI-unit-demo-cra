@@ -1,9 +1,10 @@
 ---
-title: 'Release [{{ env.VERSION }}]'
-Author: {{ env.AUTHOR }}
-Date: {{ env.DATE}}
-Version: {{ env.V}}
+title: '[{{ env.VERSION }}] Release'
 labels: RELEASE
 ---
-Chengelog:
+
+- **Version:** {{ env.VERSION}}
+- **Author:** {{ env.AUTHOR }}
+- **Date:** {{ env.DATE}}
+
 {{ env.CHANGELOG}}
