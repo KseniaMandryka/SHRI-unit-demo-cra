@@ -105,27 +105,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  Update-and-close-issue:
-    permissions: write-all
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Find issue number
-        id: get-issue-number
-        uses: micalevisk/last-issue-action@v2.0.0
+      - name: Comment issue with deploy
+        uses: peter-evans/create-or-update-comment@v3
         with:
-          labels: |
-            release
-          state: open
-
-      - name: Create comment
-        run: gh issue close ${{ steps.get-issue-number.outputs.issue-number }} --comment "Deploy - ${{ env.URL }}"
+          issue-number: ${{ needs.release.outputs.issueNumber }}
+          body: |
+            ## Deploy {{ github.run_id }}
         env:
-          URL: https://kseniamandryka.github.io/SHRI-unit-demo-cra/
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          
+      - name: Close Issue
+        uses: peter-evans/close-issue@v3
+        with:
+          issue-number: ${{ needs.release.outputs.issueNumber }}
+          comment: |
+            ## Close Issue
+
+
   # build-and-deploy:
   #   needs: release
   #   runs-on: ubuntu-latest
