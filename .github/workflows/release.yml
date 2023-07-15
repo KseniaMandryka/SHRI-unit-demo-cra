@@ -13,7 +13,7 @@ jobs:
   Validate-in-CI-for-PR:
     uses: ./.github/workflows/ci-pr.yml
 
-  release:
+  Release:
     needs: Validate-in-CI-for-PR
     runs-on: ubuntu-latest
     steps:
@@ -85,6 +85,7 @@ jobs:
       issueNumber: ${{ steps.create_issue.outputs.number }}
 
   Deploy:
+    needs: Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -108,7 +109,7 @@ jobs:
       - name: Comment issue with deploy
         uses: peter-evans/create-or-update-comment@v3
         with:
-          issue-number: ${{ needs.release.outputs.issueNumber }}
+          issue-number: ${{ needs.Release.outputs.issueNumber }}
           body: |
             ## Deploy {{ github.run_id }}
         env:
@@ -117,13 +118,13 @@ jobs:
       - name: Close Issue
         uses: peter-evans/close-issue@v3
         with:
-          issue-number: ${{ needs.release.outputs.issueNumber }}
+          issue-number: ${{ needs.Release.outputs.issueNumber }}
           comment: |
             ## Close Issue
 
 
   # build-and-deploy:
-  #   needs: release
+  #   needs: Release
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v3
