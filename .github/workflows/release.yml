@@ -1,17 +1,17 @@
-name: Release
+name: 🚀 Release
 
 on:
   push:
     tags:
-      - 'v\d+'
+      - 'v[0-9]+'
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  tests:
-    uses: ./.github/workflows/ci.yml
+  # tests:
+  #   uses: ./.github/workflows/ci.yml
 
   release:
     needs: tests
@@ -35,34 +35,32 @@ jobs:
         id: build_changelog
         uses: ardalanamini/auto-changelog@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           commit-types: |
-            fix: Bug Fixes
-            build: Build System & Dependencies
-            feat: New Features
-            ci: CI
-            docs: Documentation
-            test: Tests
-            perf: Performance Improvements
-            refactor: Refactors
-            chore: Chores
-            style: Code Style
-            revert: Reverts
-          default-commit-type: Other Changes
+            build: 🧯 Build System & Dependencies
+            ci: 💢 Continuous Integrations
+            docs: 📖 Documentation
+            feat: 🚀 New Features
+            fix: 🐞 Bug Fixes
+            perf: 💊 Performance Improvements
+            refactor: 🐝 Refactors
+            revert: 🔙 Reverts
+            style: 🎨 Code Style
+            test: ⛑ Tests
+          default-commit-type: 📂 Other Changes
           mention-authors: true
-          mention-new-contributors: true
+          mention-new-contributors: false
           include-compare-link: true
           include-pr-links: true
           include-commit-links: true
           semver: false
           use-github-autolink: true
 
-      - name: Create release issue
+      - name: Create or update issue
         id: create_issue
         uses: JasonEtco/create-an-issue@v2
         env:
           VERSION: ${{ steps.tags.outputs.currentTag}}
-          ACTION_NAME: ${{ github.action }}
           AUTHOR: ${{ steps.tags.outputs.author }}
           DATE: ${{ steps.tags.outputs.date }}
           CHANGELOG: ${{ steps.build_changelog.outputs.changelog }}
@@ -72,13 +70,13 @@ jobs:
           update_existing: true
           search_existing: all
 
-      - name: Add comment with test results to issue
+      - name: Comment issue with test results
         uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ steps.create_issue.outputs.number }}
           body: |
-            ## Tests results №${{ github.run_id }}
-            Download test results:
+            ## ⚙️ Tests results №${{ github.run_id }}
+            Download the files with the test results, can be downloaded from the link below:
             ${{github.server_url}}/${{ github.repository }}/actions/runs/${{github.run_id}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,26 +84,45 @@ jobs:
     outputs:
       issueNumber: ${{ steps.create_issue.outputs.number }}
 
-  build-and-deploy:
-    needs: release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  # build-and-deploy:
+  #   needs: release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         token: ${{ secrets.GH_TOKEN_ACTION }}
 
-      - name: Install correct Node.js version
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
+  #     - name: Create release branch
+  #       run: |
+  #         git checkout -b release-${{ github.ref_name }}
+  #         git push -u origin release-${{ github.ref_name }}
 
-      - name: Install dependencies
-        run: npm ci
+  #     - name: Install Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 18
 
-      - name: Build
-        run: npm run build
+  #     - name: Install and Build
+  #       run: |
+  #         npm ci
+  #         PUBLIC_URL="/unit-demo-cra" npm run build
 
-      - name: Deploy to GH Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: build
+  #     - name: Deploy to GitHub Pages
+  #       uses: JamesIves/github-pages-deploy-action@v4
+  #       with:
+  #         folder: build
+
+  #     - name: Comment issue with deploy
+  #       uses: peter-evans/create-or-update-comment@v3
+  #       with:
+  #         issue-number: ${{ needs.release.outputs.issueNumber }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  #     - name: Close Issue
+  #       uses: peter-evans/close-issue@v3
+  #       with:
+  #         issue-number: ${{ needs.release.outputs.issueNumber }}
+  #         comment: |
+  #           ## ✅ Close Issue
+  #           Issue automatically closed on successful deployment
