@@ -76,8 +76,7 @@ jobs:
         with:
           issue-number: ${{ steps.issue.outputs.number }}
           body: |
-            Tests results ${{ github.run_id }}
-            The files with the test results:
+            Tests results:
             ${{github.server_url}}/${{ github.repository }}/actions/runs/${{github.run_id}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
