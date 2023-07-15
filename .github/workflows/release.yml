@@ -103,14 +103,14 @@ jobs:
       - name: Deploy with gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: build
+          folder: src
 
       - name: Add info about deploy to issue
         uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ needs.Release.outputs.issueNumber }}
           body: |
-            Deploy {{ github.run_id }}
+            Deploy
             See: https://kseniamandryka.github.io/SHRI-unit-demo-cra/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
