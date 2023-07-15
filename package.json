@@ -13,6 +13,7 @@
         "@types/react-dom": "^18.0.9",
         "commitlint": "^17.6.6",
         "conventional-changelog-conventionalcommits": "^6.1.0",
+        "eslint": "^8.45.0",
         "jest-teamcity": "^1.11.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
@@ -36,7 +37,8 @@
         "eject": "react-scripts eject",
         "test": "react-scripts test",
         "e2e": "playwright test --project=chromium",
-        "test-ci": "CI=true npm test -- --reporters=\"default\" --reporters=\"jest-html-reporter\" --reporters=\"jest-teamcity\""
+        "test-ci": "CI=true npm test -- --reporters=\"default\" --reporters=\"jest-html-reporter\" --reporters=\"jest-teamcity\"",
+        "eslint": "eslint . --ext .ts,.tsx"
     },
     "eslintConfig": {
         "extends": [
