@@ -5,10 +5,6 @@ on:
     tags:
       - 'v\d+'
 
-# permissions:
-#   contents: read
-#   issues: write
-
 jobs:
   tests:
     uses: ./.github/workflows/ci.yml
@@ -68,7 +64,7 @@ jobs:
           CHANGELOG: ${{ steps.build_changelog.outputs.changelog }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: .github/ISSUE_TEMPLATE.md
+          filename: .github/ISSUE_TEMPLATE/ISSUE_TEMPLATE.yml
           update_existing: true
           search_existing: all
 
