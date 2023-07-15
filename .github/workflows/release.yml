@@ -116,14 +116,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Close Issue
-        run: gh issue close --comment "Close issue" 
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/close-issue@v3
         with:
           issue-number: ${{ needs.Release.outputs.issueNumber }}
-      # - name: Close Issue
-      #   uses: peter-evans/close-issue@v3
-      #   with:
-      #     issue-number: ${{ needs.Release.outputs.issueNumber }}
-      #     comment: |
-      #       ## Close Issue
+          comment: Close issue
