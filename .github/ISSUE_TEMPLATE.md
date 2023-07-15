@@ -1,6 +1,6 @@
 ---
 title: 'Release {{ env.VERSION }}'
-labels: Release
+labels: RELEASE
 ---
 
 Author: {{ env.AUTHOR }}
