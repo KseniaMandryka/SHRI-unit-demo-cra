@@ -103,7 +103,7 @@ jobs:
       - name: Deploy with gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: src
+          folder: build
 
       - name: Add info about deploy to issue
         uses: peter-evans/create-or-update-comment@v3
