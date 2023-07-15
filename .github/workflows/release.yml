@@ -29,8 +29,7 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "prevVersion=${prevVersion}" >> $GITHUB_OUTPUT
           echo "author=${{ github.actor }}" >> $GITHUB_OUTPUT
-          $date = new DateTime('%d.%m.%Y %H:%M:%S')
-          echo $date->format('Y-m-d H:i:s') >> $GITHUB_OUTPUT
+          echo "date=$(date +'%d.%m.%Y %H:%M:%S')->format('M j, Y | H:i:s')" >> $GITHUB_OUTPUT
 
       - name: Build Changelog
         id: build_changelog
