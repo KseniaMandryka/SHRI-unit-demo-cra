@@ -15,7 +15,7 @@ git checkout -b *branch name*
 
 Автоматизация настроена через GitHub Actions.
 
-1. Настроен линтер commitlint для соответствия сообщений о коммитах формату conventional commits (*.github/workflows/commitlint.yml*)
+1. Настроен линтер commitlint для соответствия сообщений о коммитах формату conventional commits (*.github/workflows/commitlint.yml*).
 ```
 git add .
 git commit -m *conventional commits styles*
