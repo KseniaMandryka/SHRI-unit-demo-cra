@@ -1,4 +1,4 @@
 ---
-title: 'Release {{ env.VERSION }'
+title: '{{ env.VERSION } Release'
 labels: {{ env.ACTION_NAME }}
 ---
