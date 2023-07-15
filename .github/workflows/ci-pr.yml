@@ -1,9 +1,7 @@
 name: CI PR
 run-name: CI PR
 
-on: 
-  pull_request:
-    types: [opened, synchronize, reopened]
+on: [pull_request, workflow_call]
 
 jobs:
   Validate-in-CI-for-PR:
