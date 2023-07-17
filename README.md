@@ -1,5 +1,7 @@
 # Infrastructure
 
+@ksn_mn
+
 ```
 # склонируйте репозиторий
 git clone git@github.com:KseniaMandryka/SHRI-unit-demo-cra.git
